@@ -1,53 +1,98 @@
 <!DOCTYPE html>
-<html lang="pt_BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Happy</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attribute Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Attribute Checker</h1>
+    <textarea id="inputText" placeholder="Cole o texto aqui..."></textarea>
+    <button onclick="checkAttributes()">Check</button>
+    <div class="output" id="outputText"></div>
 
-    <link rel="icon" href="./public/images/logo-icon.png" />
+    <script>
+          const attributes = {
+        "health": { "Tier3": [180.00, 250.00], "Tier4": [255.00, 350.00], "Tier5": [355.00, 500.00] },
+        "health (%)": { "Tier3": [1.44, 2.00], "Tier4": [2.04, 2.80], "Tier5": [2.84, 4.00] },
+        "ki bonus": { "Tier3": [180.00, 250.00], "Tier4": [255.00, 350.00], "Tier5": [355.00, 500.00] },
+        "ki bonus (%)": { "Tier3": [1.44, 2.00], "Tier4": [2.04, 2.80], "Tier5": [2.84, 4.00] },
+        "heal effectiveness (%)": { "Tier3": [3.96, 5.50], "Tier4": [5.61, 7.70], "Tier5": [7.81, 11.00] },
+        "health regeneration": { "Tier3": [25.20, 35.00], "Tier4": [35.70, 49.00], "Tier5": [49.70, 70.00] },
+        "health regeneration (%)": { "Tier3": [1.08, 1.50], "Tier4": [1.53, 2.10], "Tier5": [2.13, 3.00] },
+        "ki regeneration": { "Tier3": [10.80, 15.00], "Tier4": [15.30, 21.00], "Tier5": [21.30, 30.00] },
+        "ki regeneration (%)": { "Tier3": [0.36, 0.50], "Tier4": [0.51, 0.70], "Tier5": [0.71, 1.00] },
+        "life drain": { "Tier3": [21.60, 30.00], "Tier4": [30.60, 42.00], "Tier5": [42.60, 60.00] },
+        "life drain (%)": { "Tier3": [1.80, 2.50], "Tier4": [2.55, 3.50], "Tier5": [3.55, 5.00] },
+        "ki drain": { "Tier3": [21.60, 30.00], "Tier4": [30.60, 42.00], "Tier5": [42.60, 60.00] },
+        "ki drain (%)": { "Tier3": [1.80, 2.50], "Tier4": [2.55, 3.50], "Tier5": [3.55, 5.00] },
+        "movement speed (%)": { "Tier3": [2.88, 4.00], "Tier4": [4.08, 5.60], "Tier5": [5.68, 8.00] },
+        "attack speed (%)": { "Tier3": [2.88, 4.00], "Tier4": [4.08, 5.60], "Tier5": [5.68, 8.00] },
+        "cd reduction (%)": { "Tier3": [2.88, 4.00], "Tier4": [4.08, 5.60], "Tier5": [5.68, 8.00] },
+        "ki reduction (%)": { "Tier3": [3.60, 5.00], "Tier4": [5.10, 7.00], "Tier5": [7.10, 10.00] },
+        "dmg reduction (%)": { "Tier3": [1.80, 2.50], "Tier4": [2.55, 3.50], "Tier5": [3.55, 5.00] },
+        "dmg (%)": { "Tier3": [2.16, 3.00], "Tier4": [3.06, 4.20], "Tier5": [4.26, 6.00] },
+        "dmg": { "Tier3": [36.00, 50.00], "Tier4": [51.00, 70.00], "Tier5": [71.00, 100.00] },
+        "critical chance (%)": { "Tier3": [1.44, 2.00], "Tier4": [2.04, 2.80], "Tier5": [2.84, 4.00] },
+        "dodge chance (%)": { "Tier3": [1.80, 2.50], "Tier4": [2.55, 3.50], "Tier5": [3.55, 5.00] },
+        "more dmg to monster (%)": { "Tier3": [10.80, 15.00], "Tier4": [15.30, 21.00], "Tier5": [21.30, 30.00] },
+        "less dmg from monster (%)": { "Tier3": [10.80, 15.00], "Tier4": [15.30, 21.00], "Tier5": [21.30, 30.00] },
+        "dmg reflect (%)": { "Tier3": [3.60, 5.00], "Tier4": [5.10, 7.00], "Tier5": [7.10, 10.00] },
+        "tenacity (%)": { "Tier3": [7.20, 10.00], "Tier4": [10.20, 14.00], "Tier5": [14.20, 20.00] },
+        "melee range": { "Tier3": [0.00, 0.00], "Tier4": [0.00, 0.00], "Tier5": [1.00, 1.00] }
+    };
+        function checkAttributes() {
+            const text = document.getElementById('inputText').value;
+            const lines = text.split("\n").filter(line => line.trim().length > 1);
+            let formattedText = "";
 
-    <link rel="stylesheet" href="./public/css/main.css" />
-    <link rel="stylesheet" href="./public/css/animations.css" />
-    <link rel="stylesheet" href="./public/css/page-landing.css" />
+            lines.forEach(line => {
+                const parts = line.split(": +");
+                if (parts.length < 2) return;
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap"
-      rel="stylesheet"
-    />
-  </head>
+                const name = parts[0].includes("more") ? "more dmg to monster (%)" : 
+                              parts[0].includes("less") ? "less dmg from monster (%)" : parts[0].trim();
 
-  <body id="body">
-    <div id="page-landing">
-      <div id="container">
-        <header>
-          <img
-            class="animate-up"
-            id="logo"
-            src="./public/images/logo.svg"
-            alt="Logomarca de Happy"
-          />
+                const value = parseFloat(parts[1]);
+                if (attributes[name.toLowerCase()]) {
+                    for (const tier in attributes[name.toLowerCase()]) {
+                        const [min, max] = attributes[name.toLowerCase()][tier];
+                        const ql = ((value - min) / (max - min)) * 100;
+                        if (ql <= 100) {
+                            formattedText += `${tier} - ${name.toLowerCase()} - ${ql.toFixed(2)}%\n`;
+                            break;
+                        }
+                    }
+                }
+            });
 
-          <div class="location animate-up">
-            <strong>Rio do Sul</strong>
-            <p>Santa Catarina</p>
-          </div>
-        </header>
-
-        <main>
-          <h1 class="animate-up">Leve a felicidade para o mundo</h1>
-
-          <section class="visit">
-            <p class="animate-up">
-              Visite orfanatos e mude o dia de muitas crianças
-            </p>
-
-            <a class="animate-up" href="orphanages.html" title="Visite orfanatos">
-              <img src="./public/images/arrow.svg" alt="Ir para o mapa" />
-            </a>
-          </section>
-        </main>
-      </div>
-    </div>
-  </body>
+            document.getElementById('outputText').textContent = formattedText.trim();
+        }
+    </script>
+</body>
 </html>
