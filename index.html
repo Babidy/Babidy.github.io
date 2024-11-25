@@ -75,8 +75,8 @@
                 const parts = line.split(": +");
                 if (parts.length < 2) return;
 
-                const name = parts[0].includes("more") ? "more dmg to monster (%)" : 
-                              parts[0].includes("less") ? "less dmg from monster (%)" : parts[0].trim();
+                const name = parts[0].toLowerCase().includes("more") ? "more dmg to monster (%)" : 
+                              parts[0].toLowerCase().includes("less") ? "less dmg from monster (%)" : parts[0].trim();
 
                 const value = parseFloat(parts[1]);
                 if (attributes[name.toLowerCase()]) {
