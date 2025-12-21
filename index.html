@@ -28,6 +28,76 @@
             padding: 10px;
             border: 1px solid #ddd;
         }
+        :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 24px;
+      line-height: 1.35;
+    }
+    .wrap {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+    .card {
+      border: 1px solid rgba(127,127,127,.35);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.08);
+    }
+    h1 { font-size: 1.25rem; margin: 0 0 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(127,127,127,.45);
+      background: transparent;
+      font-size: 1rem;
+    }
+    .hint { font-size: .9rem; opacity: .8; margin-top: 6px; }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    button {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(127,127,127,.45);
+      background: rgba(127,127,127,.12);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { filter: brightness(1.05); }
+    .out {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 720px) {
+      .out { grid-template-columns: 1fr; }
+    }
+    .kpi {
+      border: 1px solid rgba(127,127,127,.35);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .kpi .t { font-size: .9rem; opacity: .8; margin-bottom: 6px; }
+    .kpi .v { font-size: 1.25rem; font-weight: 800; }
+    .muted { opacity: .75; font-size: .9rem; margin-top: 10px; }
+    .warn { color: #b45309; }
+    .ok { color: #0f766e; }
     </style>
 </head>
 <body>
@@ -35,6 +105,60 @@
     <textarea id="inputText" placeholder="Cole o texto aqui..."></textarea>
     <button onclick="checkAttributes()">Check</button>
     <div class="output" id="outputText"></div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+
+
+    <div class="wrap">
+    <div class="card">
+      <h1>Calculadora de cotação (Gema ↔ Gold ↔ R$)</h1>
+
+      <div class="grid">
+        <div>
+          <label for="goldPerGemK">Preço da gema (em k de gold)</label>
+          <input id="goldPerGemK" type="number" min="0" step="0.01" value="20" />
+          <div class="hint">Ex.: 20 = 20k por gema</div>
+        </div>
+
+        <div>
+          <label for="brlPer1000Gems">R$ por 1000 gemas</label>
+          <input id="brlPer1000Gems" type="number" min="0" step="0.01" value="82" />
+          <div class="hint">Ex.: 82 = R$ 82 por 1000 gemas</div>
+        </div>
+
+        <div>
+          <label for="targetGold">Gold alvo (em kk)</label>
+          <input id="targetGold" type="number" min="0" step="0.01" value="1" />
+          <div class="hint">Ex.: 1 = 1kk (1.000.000)</div>
+        </div>
+
+        <div>
+          <label for="roundMode">Arredondamento de gemas</label>
+          <input id="roundMode" type="text" value="cima" />
+          <div class="hint">Digite: <b>nenhum</b>, <b>cima</b> ou <b>baixo</b></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnCalc" type="button">Calcular</button>
+        <button id="btnReset" type="button">Resetar</button>
+      </div>
+
+      <div class="out" id="outputs"></div>
+
+      <div class="muted" id="notes"></div>
+    </div>
+  </div>
+
+
+
+    
 
     <script>
           const attributes = {
@@ -93,8 +217,113 @@
 
             document.getElementById('outputText').textContent = formattedText.trim();
         }
+
+        const $ = (id) => document.getElementById(id);
+
+    function fmtBRL(n) {
+      if (!isFinite(n)) return "—";
+      return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function fmtNum(n, digits = 2) {
+      if (!isFinite(n)) return "—";
+      return n.toLocaleString("pt-BR", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+    }
+
+    function mkKPI(title, value, sub = "") {
+      const div = document.createElement("div");
+      div.className = "kpi";
+      div.innerHTML = `
+        <div class="t">${title}</div>
+        <div class="v">${value}</div>
+        ${sub ? `<div class="muted">${sub}</div>` : ""}
+      `;
+      return div;
+    }
+
+    function parseRoundMode(s) {
+      const v = String(s || "").trim().toLowerCase();
+      if (v === "nenhum" || v === "none") return "none";
+      if (v === "baixo" || v === "floor") return "floor";
+      return "ceil"; // padrão: cima
+    }
+
+    function calc() {
+      const goldPerGemK = Number($("goldPerGemK").value);
+      const brlPer1000Gems = Number($("brlPer1000Gems").value);
+      const targetGoldKK = Number($("targetGold").value);
+      const roundMode = parseRoundMode($("roundMode").value);
+
+      const outputs = $("outputs");
+      const notes = $("notes");
+      outputs.innerHTML = "";
+      notes.textContent = "";
+
+      // Validações básicas
+      if (!(goldPerGemK > 0) || !(brlPer1000Gems > 0) || !(targetGoldKK >= 0)) {
+        notes.innerHTML = `<span class="warn">Preencha valores válidos (maiores que zero para preço da gema e R$/1000).</span>`;
+        return;
+      }
+
+      const goldPerGem = goldPerGemK * 1000;         // 20k => 20000
+      const targetGold = targetGoldKK * 1_000_000;    // 1kk => 1.000.000
+      const brlPerGem = brlPer1000Gems / 1000;        // 82/1000 => 0,082
+
+      let gemsNeededExact = targetGold / goldPerGem;  // pode ser fracionado
+      let gemsNeeded = gemsNeededExact;
+
+      if (roundMode === "ceil") gemsNeeded = Math.ceil(gemsNeededExact);
+      else if (roundMode === "floor") gemsNeeded = Math.floor(gemsNeededExact);
+
+      const costBRLExact = gemsNeededExact * brlPerGem;
+      const costBRL = gemsNeeded * brlPerGem;
+
+      const brlPerKKExact = (1_000_000 / goldPerGem) * brlPerGem; // custo de 1kk
+      const goldPerBRL = goldPerGem / brlPerGem;                  // gold por R$ 1
+      const kkPerBRL = goldPerBRL / 1_000_000;
+
+      outputs.appendChild(mkKPI("Cotação de 1kk (exata)", fmtBRL(brlPerKKExact), `${fmtNum(brlPerKKExact, 4)} R$`));
+      outputs.appendChild(mkKPI("Gemas necessárias (exatas)", fmtNum(gemsNeededExact, 6), "Sem arredondamento"));
+
+      outputs.appendChild(mkKPI("Custo do alvo (exato)", fmtBRL(costBRLExact), `${fmtNum(costBRLExact, 4)} R$`));
+
+      const roundLabel = roundMode === "none" ? "nenhum" : (roundMode === "floor" ? "baixo" : "cima");
+      outputs.appendChild(mkKPI(`Custo do alvo (arred. ${roundLabel})`, fmtBRL(costBRL), `${gemsNeeded} gemas`));
+
+      outputs.appendChild(mkKPI("Gold por R$ 1", fmtNum(goldPerBRL, 0), `${fmtNum(kkPerBRL, 6)} kk por R$ 1`));
+      outputs.appendChild(mkKPI("R$ por 1 gema", fmtBRL(brlPerGem), `${fmtNum(brlPerGem, 4)} R$`));
+
+      // Notas
+      const diffGems = gemsNeeded - gemsNeededExact;
+      const diffGold = (gemsNeeded * goldPerGem) - targetGold;
+
+      let note = `Base: 1 gema = ${fmtNum(goldPerGemK, 2)}k e 1000 gemas = ${fmtBRL(brlPer1000Gems)}.`;
+      if (roundMode !== "none") {
+        note += ` Com arredondamento (${roundLabel}), você ${diffGems >= 0 ? "compra" : "deixa de comprar"} ${fmtNum(Math.abs(diffGems), 6)} gema(s) em relação ao exato, e o gold final fica ${diffGold >= 0 ? "acima" : "abaixo"} do alvo em ${fmtNum(Math.abs(diffGold) / 1000, 2)}k.`;
+      } else {
+        note += " Sem arredondamento, o resultado pode ter gemas fracionadas (apenas para cotação).";
+      }
+      notes.innerHTML = `<span class="ok">${note}</span>`;
+    }
+
+    $("btnCalc").addEventListener("click", calc);
+    $("btnReset").addEventListener("click", () => {
+      $("goldPerGemK").value = 20;
+      $("brlPer1000Gems").value = 82;
+      $("targetGold").value = 1;
+      $("roundMode").value = "cima";
+      calc();
+    });
+
+    // Calcula ao carregar e ao digitar
+    ["goldPerGemK","brlPer1000Gems","targetGold","roundMode"].forEach(id => {
+      $(id).addEventListener("input", () => calc());
+    });
+
+    calc();
     </script>
 </body>
 </html>
+
 
 
